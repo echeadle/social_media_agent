@@ -1,8 +1,8 @@
-#-------------------------------------------------------
-# Step 0: Import packages and modules
-#-------------------------------------------------------
-import asyncio
 
+# --------------------------------------------------------------
+# Step 0: Import packages and modules
+# --------------------------------------------------------------
+import asyncio
 import os
 from youtube_transcript_api import YouTubeTranscriptApi
 from agents import Agent, Runner, WebSearchTool, function_tool, ItemHelpers, trace
@@ -10,19 +10,17 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from dataclasses import dataclass
 from typing import List
-# In social_media_agent.py
-from utils import get_youtube_video_id
 
-#-------------------------------------------------------
+
+# --------------------------------------------------------------
 # Step 1: Get OpenAI API key
-#-------------------------------------------------------
+# --------------------------------------------------------------
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-
-#-------------------------------------------------------
-# Step 2: Define Tools for Agents
-#-------------------------------------------------------
+# --------------------------------------------------------------
+# Step 2: Define tools for agent
+# --------------------------------------------------------------
 
 # Tool: Generate social media content from transcript
 @function_tool
@@ -35,7 +33,7 @@ def generate_content(video_transcript: str, social_media_platform: str):
     # Generate content
 
     response = client.responses.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         input=[
             {"role": "user", "content": f"Here is a new video transcript:\n{video_transcript}\n\n"
                                         f"Generate a social media post on my {social_media_platform} based on my provided video transcript.\n"}
@@ -46,9 +44,10 @@ def generate_content(video_transcript: str, social_media_platform: str):
     return response.output_text
 
 
-#-------------------------------------------------------
-# Step 3: Define Agents
-#-------------------------------------------------------
+# --------------------------------------------------------------
+# Step 3: Define agent (content writer agent)
+# --------------------------------------------------------------
+
 @dataclass
 class Post:
     platform: str
@@ -72,9 +71,10 @@ content_writer_agent = Agent(
 )
 
 
-#-------------------------------------------------------
-# Step 4: Define Helper Functions
-#-------------------------------------------------------
+# --------------------------------------------------------------
+# Step 4: Define helper functions
+# --------------------------------------------------------------
+
 # Fetch transcript from a youtube video using the video id
 def get_transcript(video_id: str, languages: list = None) -> str:
     """
@@ -130,23 +130,13 @@ def get_transcript(video_id: str, languages: list = None) -> str:
         print(f"Error: {error_msg}")
         raise Exception(error_msg) from e
 
-#-------------------------------------------------------
+
+
+# --------------------------------------------------------------
 # Step 5: Run the agent
-#-------------------------------------------------------
-
-#video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-#video_id = get_youtube_video_id(video_url)
-
-# if video_id:
-#     print(f"Found Video ID: {video_id}")
-# else:
-#     print("Could not find a valid YouTube video ID in the URL.")
-
+# --------------------------------------------------------------
 async def main():
-    #video_url = "https://www.youtube.com/watch?v=OZ5OZZZ2cvk"
-    video_url ="https://www.youtube.com/watch?v=bZzyPscbtI8&list=PL3QtKUJkA75n2Rp22ClKpDmLF1r-eUOWw&index=2"
-    video_id = get_youtube_video_id(video_url)
-    
+    video_id = "OZ5OZZZ2cvk"
     transcript = get_transcript(video_id)
 
     msg = f"Generate a LinkedIn post and an Instagram caption based on this video transcript: {transcript}"
@@ -164,3 +154,10 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
+
+
+
+

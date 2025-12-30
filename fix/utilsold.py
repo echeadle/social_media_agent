@@ -1,6 +1,14 @@
 import re
-from typing import Optional
+from typing import List, Optional
 from youtube_transcript_api import YouTubeTranscriptApi
+from pytube import YouTube
+from youtube_transcript_api._errors import (
+    CouldNotRetrieveTranscript,
+    InvalidVideoId,
+    NoTranscriptFound,
+    TranscriptsDisabled,
+    VideoUnavailable,
+)
 
 
 def get_youtube_video_id(url: str) -> Optional[str]:
@@ -29,7 +37,25 @@ def get_youtube_video_id(url: str) -> Optional[str]:
     return None
 
 
-def get_transcript(video_id: str, languages: list = None) -> str:
+def get_youtube_video_title(video_id: str) -> Optional[str]:
+    """
+    Retrieves the title of a YouTube video given its ID.
+
+    Args:
+        video_id: The 11-character YouTube video ID.
+
+    Returns:
+        The video title as a string, or None if the title cannot be retrieved.
+    """
+    try:
+        yt = YouTube(f"https://www.youtube.com/watch?v={video_id}")
+        return yt.title
+    except Exception:
+        # It's non-critical if the title can't be fetched, so we can fail silently.
+        return None
+
+
+def get_transcript(video_id: str, languages: List[str] = None) -> str:
     """
     Retrieves the transcript for a YouTube video.
 
@@ -53,22 +79,13 @@ def get_transcript(video_id: str, languages: list = None) -> str:
         transcript_list = api.fetch(video_id, languages=languages)
         return " ".join(snippet.text for snippet in transcript_list)
     except Exception as e:
-        from youtube_transcript_api._errors import (
-            NoTranscriptFound,
-            VideoUnavailable,
-            TranscriptsDisabled,
-            CouldNotRetrieveTranscript,
-            InvalidVideoId,
-        )
-
         if isinstance(e, NoTranscriptFound):
             raise Exception(f"No transcript found for video {video_id} in languages: {languages}") from e
         elif isinstance(e, (VideoUnavailable, TranscriptsDisabled)):
             raise Exception(f"Transcripts are unavailable or disabled for video {video_id}: {e}") from e
         elif isinstance(e, (InvalidVideoId, CouldNotRetrieveTranscript)):
             raise Exception(f"Could not retrieve transcript for video {video_id}: {e}") from e
-        else:
-            raise Exception(f"An unexpected error occurred fetching transcript for {video_id}: {e}") from e
+        raise Exception(f"An unexpected error occurred fetching transcript for {video_id}: {e}") from e
 
 
 if __name__ == "__main__":
